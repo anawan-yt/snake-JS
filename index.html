@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Anawan - Snake JS</title>
+    <style>
+      body {
+        margin: 0;
+        display: grid;
+        height: 100svh;
+        place-items: center;
+        background: repeating-conic-gradient(
+          from 45deg,
+          #253a5e 0% 25%,
+          #3c5e8b 0% 50%
+        );
+        background-size: max(10vw, 10svh) max(10vw, 10svh);
+        background-color: #3c5e8b;
+      }
+      #game {
+        width: min(80vw, 80svh);
+      }
+    </style>
+  </head>
+  <body>
+    <canvas width="400" height="400" id="game" />
+  </body>
+  <script>
+    const game = document.getElementById("game");
+    const ctx = game.getContext("2d");
+
+    const gridSize = 20;
+    const cellSize = 20;
+    const startX = 5;
+    const startY = 5;
+    const offset = 2;
+    const apple = { x: 10, y: 10 };
+    const tail = [];
+    const snake = {
+      x: startX,
+      y: startY,
+      velocityX: 1,
+      velocityY: 0,
+      length: 1,
+    };
+    const snakeColors = ["#63c74d", "#3e8948", "#265c42", "#193c3e"];
+
+    setInterval(loop, 1000 / 12);
+    document.addEventListener("keydown", handleMovement);
+
+    function loop() {
+      snake.x += snake.velocityX;
+      snake.y += snake.velocityY;
+
+      if (snake.x < 0) {
+        snake.x = gridSize - 1;
+      } else if (snake.x > gridSize - 1) {
+        snake.x = 0;
+      } else if (snake.y < 0) {
+        snake.y = gridSize - 1;
+      } else if (snake.y > gridSize - 1) {
+        snake.y = 0;
+      }
+
+      ctx.fillStyle = "#181425";
+      ctx.fillRect(0, 0, game.width, game.height);
+
+      ctx.fillStyle = "#ff0044";
+      ctx.fillRect(
+        apple.x * cellSize + offset / 2,
+        apple.y * cellSize + offset / 2,
+        cellSize - offset,
+        cellSize - offset
+      );
+
+      for (let i = 0; i < tail.length; i++) {
+        ctx.fillStyle =
+          snakeColors[Math.min(tail.length - i - 1, snakeColors.length - 1)];
+        ctx.fillRect(
+          tail[i].x * cellSize + offset / 2,
+          tail[i].y * cellSize + offset / 2,
+          cellSize - offset,
+          cellSize - offset
+        );
+
+        if (tail[i].x === snake.x && tail[i].y === snake.y) {
+          die();
+        }
+      }
+
+      tail.push({ x: snake.x, y: snake.y });
+
+      while (tail.length > snake.length) {
+        tail.shift();
+      }
+
+      if (snake.x === apple.x && snake.y === apple.y) {
+        snake.length++;
+        placeApple();
+      }
+    }
+
+    function die() {
+      snake.x = startX;
+      snake.y = startY;
+      snake.velocityX = 1;
+      snake.velocityY = 0;
+      snake.length = 1;
+      tail.splice(0, tail.length);
+    }
+
+    function placeApple() {
+      const freeCells = [];
+      for (let i = 0; i < gridSize; i++) {
+        for (let j = 0; j < gridSize; j++) {
+          let isOccupied = tail.some(
+            (segment) => segment.x === i && segment.y === j
+          );
+          if (!isOccupied) {
+            freeCells.push({ x: i, y: j });
+          }
+        }
+      }
+
+      const index = Math.floor(Math.random() * freeCells.length);
+      apple.x = freeCells[index].x;
+      apple.y = freeCells[index].y;
+    }
+
+    function handleMovement(e) {
+      switch (e.key) {
+        case "ArrowDown":
+        case "s":
+          if (snake.velocityY === -1) {
+            return;
+          }
+          snake.velocityY = 1;
+          snake.velocityX = 0;
+          break;
+        case "ArrowUp":
+        case "z":
+          if (snake.velocityY === 1) {
+            return;
+          }
+          snake.velocityY = -1;
+          snake.velocityX = 0;
+          break;
+        case "ArrowLeft":
+        case "q":
+          if (snake.velocityX === 1) {
+            return;
+          }
+          snake.velocityX = -1;
+          snake.velocityY = 0;
+          break;
+        case "ArrowRight":
+        case "d":
+          if (snake.velocityX === -1) {
+            return;
+          }
+          snake.velocityX = 1;
+          snake.velocityY = 0;
+      }
+    }
+  </script>
+</html>
